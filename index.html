@@ -3,144 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>가위바위보 게임</title>
+    <title>가위바위보 연승 챌린지</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* CSS 스타일 */
+        /* 기존 스타일 유지 및 추가 스타일 */
         body {
-            background-color: #a0c4ff; /* 전체적인 파란색 무드의 배경 */
+            background-color: #a0c4ff;
             font-family: 'Pretendard', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             color: #1a3a6e;
+            flex-direction: column; /* 세로 배치 허용 */
+            padding: 20px;
         }
 
-        .game-container {
+        .main-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .game-container, .leaderboard-container {
             text-align: center;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
         }
 
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-        }
+        h1 { font-size: 2em; margin-bottom: 10px; }
+        h2 { font-size: 1.5em; margin-bottom: 15px; color: #4a7ac2; }
 
-        p {
+        .streak-box {
+            background-color: #e0eaff;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
             font-size: 1.2em;
-            margin-bottom: 30px;
         }
+
+        .streak-count { color: #ff4757; font-size: 1.5em; }
 
         .choices button {
-            font-size: 5rem; /* 이모티콘 크기 */
-            margin: 0 15px;
-            padding: 20px;
+            font-size: 3.5rem;
+            margin: 5px;
+            padding: 10px;
             border: 3px solid #699eff;
-            border-radius: 50%; /* 원형 버튼 */
-            background-color: #e0eaff;
+            border-radius: 50%;
+            background-color: #fff;
             cursor: pointer;
-            transition: transform 0.2s ease, background-color 0.2s ease;
-            line-height: 1; /* 이모티콘이 중앙에 오도록 */
+            transition: transform 0.2s ease;
         }
+        .choices button:hover { transform: scale(1.1); background-color: #e0eaff; }
 
-        .choices button:hover {
-            background-color: #c0d8ff;
-            transform: scale(1.1); /* 마우스를 올렸을 때 살짝 커지는 효과 */
-        }
-
-        .result {
-            margin-top: 40px;
-            font-size: 1.8em;
-            font-weight: bold;
-            height: 60px; /* 결과 텍스트 높이를 고정하여 레이아웃이 흔들리지 않게 함 */
-        }
-        
         .result-display {
              display: flex;
              justify-content: center;
-             align-items: center;
-             gap: 20px; /* 선택지 사이의 간격 */
+             gap: 20px;
              margin-top: 20px;
-             font-size: 1.5em;
         }
+        .result-display span { font-size: 2.5rem; display: block; }
+        .result { margin-top: 20px; font-size: 1.5em; font-weight: bold; height: 40px; }
 
-        .result-display div {
-            text-align: center;
+        /* 리더보드 스타일 */
+        .input-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 5px;
+            justify-content: center;
         }
-        
-        .result-display span {
-            font-size: 3rem; /* 결과 이모티콘 크기 */
-            display: block;
+        input {
+            padding: 10px;
+            border: 2px solid #699eff;
+            border-radius: 8px;
+            width: 60%;
         }
+        .btn-save {
+            padding: 10px 15px;
+            background-color: #699eff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-save:hover { background-color: #4a7ac2; }
+        .btn-save:disabled { background-color: #ccc; cursor: not-allowed; }
 
+        ul { list-style: none; padding: 0; text-align: left; }
+        li {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        li:first-child { font-weight: bold; color: #ff4757; }
     </style>
 </head>
 <body>
 
-<div class="game-container">
-    <h1>가위바위보 게임</h1>
-    <p>아래에서 하나를 선택해주세요!</p>
-    <div class="choices">
-        <button onclick="playGame('rock')">✊</button>
-        <button onclick="playGame('paper')">✋</button>
-        <button onclick="playGame('scissors')">✌️</button>
-    </div>
-    <div class="result-display">
-        <div>
-            <p>나</p>
-            <span id="player-choice-emoji"></span>
+<div class="main-container">
+    <div class="game-container">
+        <h1>가위바위보 챌린지</h1>
+        
+        <div class="streak-box">
+            현재 연승: <span id="current-streak" class="streak-count">0</span>승
         </div>
-        <div>
-            <p>컴퓨터</p>
-            <span id="computer-choice-emoji"></span>
+
+        <div class="choices">
+            <button onclick="playGame('rock')">✊</button>
+            <button onclick="playGame('paper')">✋</button>
+            <button onclick="playGame('scissors')">✌️</button>
+        </div>
+
+        <div class="result-display">
+            <div><p>나</p><span id="player-choice-emoji">❔</span></div>
+            <div><p>컴퓨터</p><span id="computer-choice-emoji">❔</span></div>
+        </div>
+        
+        <div id="result-text" class="result">도전을 시작하세요!</div>
+
+        <div class="input-group">
+            <input type="text" id="player-name" placeholder="닉네임 입력" maxlength="10">
+            <button class="btn-save" onclick="saveRecord()" id="save-btn">기록 저장</button>
         </div>
     </div>
-    <div id="result-text" class="result">
-        게임을 시작하세요!
+
+    <div class="leaderboard-container">
+        <h2>🏆 명예의 전당 (TOP 10)</h2>
+        <ul id="leaderboard-list">
+            <li>로딩 중...</li>
+        </ul>
     </div>
 </div>
 
 <script>
-    // JavaScript 로직
-    const resultText = document.getElementById('result-text');
-    const playerChoiceEmoji = document.getElementById('player-choice-emoji');
-    const computerChoiceEmoji = document.getElementById('computer-choice-emoji');
+    // ==========================================
+    // 1. Supabase 설정 (이 부분을 꼭 채워주세요!)
+    // ==========================================
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // 예: https://xyz.supabase.co
+    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Settings > API > anon public key
 
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ==========================================
+    // 2. 게임 로직
+    // ==========================================
+    let streak = 0;
     const choices = ['rock', 'paper', 'scissors'];
-    const choiceEmojis = {
-        rock: '✊',
-        paper: '✋',
-        scissors: '✌️'
-    };
+    const emojis = { rock: '✊', paper: '✋', scissors: '✌️' };
+    
+    const resultText = document.getElementById('result-text');
+    const streakDisplay = document.getElementById('current-streak');
+    const pEmoji = document.getElementById('player-choice-emoji');
+    const cEmoji = document.getElementById('computer-choice-emoji');
 
-    function playGame(playerChoice) {
-        // 컴퓨터의 선택을 랜덤으로 결정합니다.
-        const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+    function playGame(player) {
+        const computer = choices[Math.floor(Math.random() * choices.length)];
+        pEmoji.textContent = emojis[player];
+        cEmoji.textContent = emojis[computer];
 
-        // 사용자와 컴퓨터의 선택을 화면에 표시합니다.
-        playerChoiceEmoji.textContent = choiceEmojis[playerChoice];
-        computerChoiceEmoji.textContent = choiceEmojis[computerChoice];
-        
-        // 결과를 판단합니다.
-        if (playerChoice === computerChoice) {
-            // 비겼을 경우
-            resultText.innerHTML = "비겼습니다! 🤔";
+        if (player === computer) {
+            resultText.innerHTML = "비겼습니다! (연승 유지)";
+            resultText.style.color = "#555";
         } else if (
-            (playerChoice === 'rock' && computerChoice === 'scissors') ||
-            (playerChoice === 'paper' && computerChoice === 'rock') ||
-            (playerChoice === 'scissors' && computerChoice === 'paper')
+            (player === 'rock' && computer === 'scissors') ||
+            (player === 'paper' && computer === 'rock') ||
+            (player === 'scissors' && computer === 'paper')
         ) {
-            // 이겼을 경우
-            resultText.innerHTML = "이겼습니다! 😄";
+            streak++;
+            resultText.innerHTML = "이겼습니다! 🔥";
+            resultText.style.color = "#2ecc71";
         } else {
-            // 졌을 경우
-            resultText.innerHTML = "졌습니다... 😢";
+            streak = 0; // 지면 연승 초기화
+            resultText.innerHTML = "졌습니다... 연승 끝 😢";
+            resultText.style.color = "#e74c3c";
+        }
+        streakDisplay.textContent = streak;
+    }
+
+    // ==========================================
+    // 3. 리더보드 기능 (Supabase)
+    // ==========================================
+    
+    // 기록 저장하기
+    async function saveRecord() {
+        const name = document.getElementById('player-name').value;
+        if (!name) {
+            alert("닉네임을 입력해주세요!");
+            return;
+        }
+        if (streak === 0) {
+            alert("0승은 저장할 수 없습니다. 이겨보세요!");
+            return;
+        }
+
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true;
+        btn.textContent = "저장 중...";
+
+        try {
+            // 데이터 삽입
+            const { error } = await supabase
+                .from('leaderboard')
+                .insert([{ player_name: name, streak_count: streak }]);
+
+            if (error) throw error;
+
+            alert("기록이 저장되었습니다!");
+            fetchLeaderboard(); // 리더보드 새로고침
+        } catch (err) {
+            console.error('Error:', err);
+            alert("저장에 실패했습니다.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "기록 저장";
         }
     }
+
+    // 리더보드 불러오기
+    async function fetchLeaderboard() {
+        const list = document.getElementById('leaderboard-list');
+        
+        try {
+            // streak_count 기준 내림차순으로 상위 10개 가져오기
+            const { data, error } = await supabase
+                .from('leaderboard')
+                .select('*')
+                .order('streak_count', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+
+            // HTML 그리기
+            list.innerHTML = '';
+            data.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${index + 1}위. ${item.player_name}</span>
+                    <strong>${item.streak_count}연승</strong>
+                `;
+                list.appendChild(li);
+            });
+        } catch (err) {
+            console.error('Error:', err);
+            list.innerHTML = '<li>불러오기 실패</li>';
+        }
+    }
+
+    // 페이지 로드시 리더보드 불러오기
+    window.onload = fetchLeaderboard;
+
 </script>
 
 </body>
