@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가위바위보 게임</title>
+    <style>
+        /* CSS 스타일 */
+        body {
+            background-color: #a0c4ff; /* 전체적인 파란색 무드의 배경 */
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #1a3a6e;
+        }
+
+        .game-container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .choices button {
+            font-size: 5rem; /* 이모티콘 크기 */
+            margin: 0 15px;
+            padding: 20px;
+            border: 3px solid #699eff;
+            border-radius: 50%; /* 원형 버튼 */
+            background-color: #e0eaff;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            line-height: 1; /* 이모티콘이 중앙에 오도록 */
+        }
+
+        .choices button:hover {
+            background-color: #c0d8ff;
+            transform: scale(1.1); /* 마우스를 올렸을 때 살짝 커지는 효과 */
+        }
+
+        .result {
+            margin-top: 40px;
+            font-size: 1.8em;
+            font-weight: bold;
+            height: 60px; /* 결과 텍스트 높이를 고정하여 레이아웃이 흔들리지 않게 함 */
+        }
+        
+        .result-display {
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             gap: 20px; /* 선택지 사이의 간격 */
+             margin-top: 20px;
+             font-size: 1.5em;
+        }
+
+        .result-display div {
+            text-align: center;
+        }
+        
+        .result-display span {
+            font-size: 3rem; /* 결과 이모티콘 크기 */
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>가위바위보 게임</h1>
+    <p>아래에서 하나를 선택해주세요!</p>
+    <div class="choices">
+        <button onclick="playGame('rock')">✊</button>
+        <button onclick="playGame('paper')">✋</button>
+        <button onclick="playGame('scissors')">✌️</button>
+    </div>
+    <div class="result-display">
+        <div>
+            <p>나</p>
+            <span id="player-choice-emoji"></span>
+        </div>
+        <div>
+            <p>컴퓨터</p>
+            <span id="computer-choice-emoji"></span>
+        </div>
+    </div>
+    <div id="result-text" class="result">
+        게임을 시작하세요!
+    </div>
+</div>
+
+<script>
+    // JavaScript 로직
+    const resultText = document.getElementById('result-text');
+    const playerChoiceEmoji = document.getElementById('player-choice-emoji');
+    const computerChoiceEmoji = document.getElementById('computer-choice-emoji');
+
+    const choices = ['rock', 'paper', 'scissors'];
+    const choiceEmojis = {
+        rock: '✊',
+        paper: '✋',
+        scissors: '✌️'
+    };
+
+    function playGame(playerChoice) {
+        // 컴퓨터의 선택을 랜덤으로 결정합니다.
+        const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+
+        // 사용자와 컴퓨터의 선택을 화면에 표시합니다.
+        playerChoiceEmoji.textContent = choiceEmojis[playerChoice];
+        computerChoiceEmoji.textContent = choiceEmojis[computerChoice];
+        
+        // 결과를 판단합니다.
+        if (playerChoice === computerChoice) {
+            // 비겼을 경우
+            resultText.innerHTML = "비겼습니다! 🤔";
+        } else if (
+            (playerChoice === 'rock' && computerChoice === 'scissors') ||
+            (playerChoice === 'paper' && computerChoice === 'rock') ||
+            (playerChoice === 'scissors' && computerChoice === 'paper')
+        ) {
+            // 이겼을 경우
+            resultText.innerHTML = "이겼습니다! 😄";
+        } else {
+            // 졌을 경우
+            resultText.innerHTML = "졌습니다... 😢";
+        }
+    }
+</script>
+
+</body>
+</html>
